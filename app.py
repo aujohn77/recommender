@@ -4,6 +4,9 @@ import numpy as np
 import pickle
 import os
 import gdown
+from surprise import Dataset, Reader
+from surprise import KNNBasic
+
 from recommender_functions import get_recommendations, get_top_n_products
 
 # Download user_item_matrix.pkl if it doesn't exist
