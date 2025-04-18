@@ -2,10 +2,21 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import os
+import gdown
+
+# Download user_item_matrix.pkl if it doesn't exist
+file_id = "1xBlXLWURaR6MuFIlZrnYWiMbj2sLxi6j"
+output_path = "user_item_matrix.pkl"
+
+if not os.path.exists(output_path):
+    gdown.download(id=file_id, output=output_path, quiet=False)
+
+
+
+
 
 from recommender_functions import get_recommendations, get_top_n_products
-
-
 
 # Load user mapping
 with open("user_mapping.pkl", "rb") as f:
@@ -76,3 +87,5 @@ else:
         results = get_top_n_products(product_stats, n=10, min_ratings=20)
         st.success("Popular picks based on adjusted average rating:")
         st.table(results)
+
+
