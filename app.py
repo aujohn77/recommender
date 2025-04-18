@@ -33,10 +33,7 @@ with open("item_counts.pkl", "rb") as f:
 # Load product_stats (for rank-based fallback)
 with open("product_stats.pkl", "rb") as f:
     product_stats = pickle.load(f)
-
-# Load your trained model
-with open("algo_deploy.pkl", "rb") as f:
-    algo_deploy = pickle.load(f)
+    
 
 
 # 1. Download your DataFrame (df) from Google Drive
