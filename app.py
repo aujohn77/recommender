@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import os
 import gdown
+from recommender_functions import get_recommendations, get_top_n_products
 
 # Download user_item_matrix.pkl if it doesn't exist
 file_id = "1xBlXLWURaR6MuFIlZrnYWiMbj2sLxi6j"
@@ -16,7 +17,6 @@ if not os.path.exists(output_path):
 
 
 
-from recommender_functions import get_recommendations, get_top_n_products
 
 # Load user mapping
 with open("user_mapping.pkl", "rb") as f:
@@ -39,17 +39,31 @@ with open("algo_deploy.pkl", "rb") as f:
     algo_deploy = pickle.load(f)
 
 
-# Assumed to already be loaded:
-# - algo_deploy: trained model
-# - user_item_matrix
-# - user_mapping
-# - item_counts
-# - product_stats
-# - get_recommendations(...)
-# - get_top_n_products(...)
+# 1. Download your DataFrame (df) from Google Drive
+file_id = "19JkYSNff3y9g4Yq131PqvLKXoVfMV15r"
+gdown.download(id=file_id, output="df.pkl", quiet=False)
+
+# 2. Load the DataFrame
+with open("df.pkl", "rb") as f:
+    df = pickle.load(f)
+
+# 3. Convert the DataFrame into a Surprise dataset
+reader = Reader(rating_scale=(1, 5))
+data = Dataset.load_from_df(df[['user_id', 'product_id', 'rating']], reader)
+
+# 4. Build full training set
+full_trainset = data.build_full_trainset()
+
+# 5. Define and train the model (User-based Collaborative Filtering)
+sim_options_user = {'name': 'cosine', 'user_based': True}
+algo_deploy = KNNBasic(sim_options=sim_options_user)
+algo_deploy.fit(full_trainset)
 
 # Preload example users (in user_mapping)
 sample_user_ids = list(user_mapping.keys())[:10]
+
+
+
 
 st.title("📦 Product Recommender")
 
@@ -87,5 +101,3 @@ else:
         results = get_top_n_products(product_stats, n=10, min_ratings=20)
         st.success("Popular picks based on adjusted average rating:")
         st.table(results)
-
-
