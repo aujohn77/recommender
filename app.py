@@ -96,7 +96,8 @@ elif mode == "Enter User ID":
     input_user = st.text_input("Enter User ID:")
     if st.button("Show Recommendations"):
         try:
-            input_user_num = [k for k, v in user_mapping.items() if v == input_user][0]
+            input_user_num = [k for k, v in user_mapping.items() if str(v) == str(input_user)][0]
+
             results = get_recommendations(
                 user_item_matrix, user_mapping, input_user_num,
                 top_n=10, item_counts=item_counts
