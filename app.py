@@ -6,7 +6,6 @@ import os
 import gdown
 from surprise import Dataset, Reader
 from surprise import KNNBasic
-
 from recommender_functions import get_recommendations, get_top_n_products
 
 # Download user_item_matrix.pkl if it doesn't exist
@@ -15,10 +14,6 @@ output_path = "user_item_matrix.pkl"
 
 if not os.path.exists(output_path):
     gdown.download(id=file_id, output=output_path, quiet=False)
-
-
-
-
 
 
 # Load user mapping
@@ -36,31 +31,50 @@ with open("item_counts.pkl", "rb") as f:
 # Load product_stats (for rank-based fallback)
 with open("product_stats.pkl", "rb") as f:
     product_stats = pickle.load(f)
-    
-
-
-# 1. Download your DataFrame (df) from Google Drive
-file_id = "19JkYSNff3y9g4Yq131PqvLKXoVfMV15r"
-gdown.download(id=file_id, output="df.pkl", quiet=False)
-
-# 2. Load the DataFrame
-with open("df.pkl", "rb") as f:
-    df = pickle.load(f)
-
-# 3. Convert the DataFrame into a Surprise dataset
-reader = Reader(rating_scale=(1, 5))
-data = Dataset.load_from_df(df[['user_id', 'product_id', 'rating']], reader)
-
-# 4. Build full training set
-full_trainset = data.build_full_trainset()
-
-# 5. Define and train the model (User-based Collaborative Filtering)
-sim_options_user = {'name': 'cosine', 'user_based': True}
-algo_deploy = KNNBasic(sim_options=sim_options_user)
-algo_deploy.fit(full_trainset)
 
 # Preload example users (in user_mapping)
 sample_user_ids = list(user_mapping.keys())[:10]
+
+
+
+import requests
+
+def call_prediction_api(user_id, product_id):
+    try:
+        response = requests.post(
+            "https://aujohn77.hf.space/predict",
+            json={"user_id": user_id, "product_id": product_id},
+            timeout=5
+        )
+        result = response.json()
+        return result.get("rating", None)
+    except Exception as e:
+        return None
+
+# ✅ REPLACE get_recommendations with version that uses call_prediction_api
+def get_recommendations(user_item_matrix, user_mapping, user_number, top_n, item_counts, threshold=4.0):
+    if user_number not in user_mapping:
+        return f"Invalid user number. Choose between 1 and {len(user_mapping)}."
+
+    real_user_id = user_mapping[user_number]
+    non_interacted_products = user_item_matrix.loc[real_user_id][user_item_matrix.loc[real_user_id].isnull()].index.tolist()
+
+    recommendations = []
+    for item_id in non_interacted_products:
+        est = call_prediction_api(real_user_id, item_id)
+        if est is None:
+            continue
+
+        n = item_counts.get(item_id, 1)
+        adjusted_est = est - (1 / np.sqrt(n))
+
+        if adjusted_est >= threshold:
+            recommendations.append((item_id, adjusted_est, n))
+
+    recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
+    return recommendations
+
+
 
 
 
