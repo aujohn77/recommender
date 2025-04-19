@@ -17,7 +17,7 @@ if not os.path.exists(output_path):
 # Load user mapping
 with open("user_mapping.pkl", "rb") as f:
     user_mapping = pickle.load(f)
-
+ 
 # Load user-item matrix
 with open("user_item_matrix.pkl", "rb") as f:
     user_item_matrix = pickle.load(f)
