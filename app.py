@@ -4,8 +4,6 @@ import numpy as np
 import pickle
 import os
 import gdown
-from surprise import Dataset, Reader
-from surprise import KNNBasic
 from recommender_functions import get_recommendations, get_top_n_products
 
 # Download user_item_matrix.pkl if it doesn't exist
@@ -100,7 +98,7 @@ elif mode == "Enter User ID":
         input_user_num = [k for k, v in user_mapping.items() if v == input_user][0]
         if st.button("Show Recommendations"):
             results = get_recommendations(
-            user_item_matrix, user_mapping, demo_user,
+            user_item_matrix, user_mapping, input_user_num,
             top_n=10, item_counts=item_counts
             )
 
