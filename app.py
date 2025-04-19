@@ -84,9 +84,9 @@ mode = st.sidebar.radio("Choose an option:", ["Demo User", "Enter User ID", "Con
 if mode == "Demo User":
     demo_user = st.selectbox("Select a demo user:", sample_user_ids)
     if st.button("Show Recommendations"):
-            results = get_recommendations(
-            user_item_matrix, user_mapping, demo_user,
-            top_n=10, item_counts=item_counts
+        results = get_recommendations(
+        user_item_matrix, user_mapping, demo_user,
+        top_n=10, item_counts=item_counts
         )
 
         st.success(f"Top recommendations for user #{demo_user}")
