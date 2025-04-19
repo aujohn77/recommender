@@ -92,22 +92,27 @@ if mode == "Demo User":
         st.success(f"Top recommendations for user #{demo_user}")
         st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
 
+
+
 elif mode == "Enter User ID":
-    input_user = st.text_input("Enter User ID:")
+    input_user = st.text_input(f"Enter User Number (0 to {len(user_mapping)-1}):")
     if st.button("Show Recommendations"):
         try:
-            input_user_num = [k for k, v in user_mapping.items() if str(v) == str(input_user)][0]
+            input_user_num = int(input_user)
+            if input_user_num not in user_mapping:
+                raise ValueError("Invalid user number.")
 
             results = get_recommendations(
                 user_item_matrix, user_mapping, input_user_num,
                 top_n=10, item_counts=item_counts
             )
-            st.success(f"Top personalized recommendations for user {input_user}")
+            st.success(f"Top personalized recommendations for user #{input_user}")
             st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
         except:
             st.warning("User not found. Showing top-ranked products.")
             results = get_top_n_products(product_stats, n=10, min_ratings=20)
             st.table(results)
+
 
 else:
     if st.button("Show Popular Products"):
