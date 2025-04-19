@@ -86,10 +86,11 @@ mode = st.sidebar.radio("Choose an option:", ["Demo User", "Enter User ID", "Con
 if mode == "Demo User":
     demo_user = st.selectbox("Select a demo user:", sample_user_ids)
     if st.button("Show Recommendations"):
-        results = get_recommendations(
+            results = get_recommendations(
             user_item_matrix, user_mapping, demo_user,
-            top_n=10, algo=algo_deploy, item_counts=item_counts
+            top_n=10, item_counts=item_counts
         )
+
         st.success(f"Top recommendations for user #{demo_user}")
         st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
 
@@ -99,9 +100,10 @@ elif mode == "Enter User ID":
         input_user_num = [k for k, v in user_mapping.items() if v == input_user][0]
         if st.button("Show Recommendations"):
             results = get_recommendations(
-                user_item_matrix, user_mapping, input_user_num,
-                top_n=10, algo=algo_deploy, item_counts=item_counts
+            user_item_matrix, user_mapping, demo_user,
+            top_n=10, item_counts=item_counts
             )
+
             st.success(f"Top personalized recommendations for user {input_user}")
             st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
     except:
