@@ -37,7 +37,8 @@ sample_user_ids = list(user_mapping.keys())[:10]
 
 
 
-
+# This function is the bridge between the Streamlit app and the model that is hosted in Hugging Face.
+# It sends a user-product pair and gets back a predicted rating.
 def call_prediction_api(user_id, product_id):
     try:
         response = requests.post(
@@ -50,7 +51,7 @@ def call_prediction_api(user_id, product_id):
     except Exception as e:
         return None
 
-# ✅ REPLACE get_recommendations with version that uses call_prediction_api
+# get_recommendations with version that uses call_prediction_api
 def get_recommendations(user_item_matrix, user_mapping, user_number, top_n, item_counts, threshold=4.0):
     if user_number not in user_mapping:
         return f"Invalid user number. Choose between 1 and {len(user_mapping)}."
@@ -60,7 +61,7 @@ def get_recommendations(user_item_matrix, user_mapping, user_number, top_n, item
 
     recommendations = []
     for item_id in non_interacted_products:
-        est = call_prediction_api(real_user_id, item_id)
+        est = call_prediction_api(real_user_id, item_id) # <--- predictions are called here
         if est is None:
             continue
 
