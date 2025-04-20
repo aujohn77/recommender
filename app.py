@@ -4,71 +4,103 @@ import pickle
 import os
 from recommender_functions import get_top_n_products
 
+# ————— Load Precomputed Data —————
 
-# Load recommendations dictionary
+# 1) Recommendations dictionary
 with open("recommendations_dict.pkl", "rb") as f:
     recommendations_dict = pickle.load(f)
 
-# Load user mapping
+# 2) User mapping (frontend number → real user_id)
 with open("user_mapping.pkl", "rb") as f:
     user_mapping = pickle.load(f)
 
-# Load product_stats (for fallback)
+# 3) Trim mapping to only users with entries in recommendations_dict
+user_mapping = {
+    num: uid
+    for num, uid in user_mapping.items()
+    if uid in recommendations_dict
+}
+
+# 4) Product stats for fallback
 with open("product_stats.pkl", "rb") as f:
     product_stats = pickle.load(f)
 
-# Preload example users
+# Preload a few example users for the “Demo User” mode
 sample_user_ids = list(user_mapping.keys())[:10]
 
-# Function to get recommendations from precomputed dictionary
+
+# ————— Helper Function —————
+
 def get_recommendations_from_dict(recommendations_dict, user_mapping, user_number):
+    """
+    Returns a list of (product_id, adjusted_score) for a valid user_number,
+    or an error string if the user_number is invalid.
+    """
     if user_number not in user_mapping:
-        return f"Invalid user number. Choose between 1 and {len(user_mapping)}."
+        return f"Invalid user number. Choose between {min(user_mapping)} and {max(user_mapping)}."
 
     user_id = user_mapping[user_number]
     return recommendations_dict.get(user_id, [])
 
-# ---------------- Streamlit UI ---------------- #
+
+# ————— Streamlit App —————
+
 st.title("📦 Product Recommender")
 
-mode = st.sidebar.radio("Choose an option:", ["Demo User", "Enter User ID", "Continue as Guest"])
+mode = st.sidebar.radio(
+    "Choose an option:",
+    ["Demo User", "Enter User ID", "Continue as Guest"]
+)
 
 if mode == "Demo User":
     demo_user = st.selectbox("Select a demo user:", sample_user_ids)
     if st.button("Show Recommendations"):
-        results = get_recommendations_from_dict(recommendations_dict, user_mapping, demo_user)
+        recs = get_recommendations_from_dict(
+            recommendations_dict, user_mapping, demo_user
+        )
         st.success(f"Top recommendations for user #{demo_user}")
-        st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score"]))
+        st.table(
+            pd.DataFrame(recs, columns=["Product ID", "Adjusted Score"])
+        )
 
 elif mode == "Enter User ID":
-    input_user = st.text_input(f"Enter User Number (0 to {len(user_mapping)-1}):")
+    prompt = f"Enter User Number ({min(user_mapping)} to {max(user_mapping)}):"
+    input_user = st.text_input(prompt)
     if st.button("Show Recommendations"):
         try:
-            input_user_num = int(input_user)
-            results = get_recommendations_from_dict(recommendations_dict, user_mapping, input_user_num)
+            num = int(input_user)
+            recs = get_recommendations_from_dict(
+                recommendations_dict, user_mapping, num
+            )
 
-            # Handle "Invalid user number" return
-            if isinstance(results, str) or not results:
-
-                st.warning("User not found. Showing top-ranked products.")
-                results = get_top_n_products(product_stats, n=10, min_ratings=20)
-                st.table(results)
+            if isinstance(recs, str) or not recs:
+                st.warning("User not found or no recommendations. Showing top-ranked products.")
+                fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
+                st.table(fallback)
             else:
-                st.success(f"Top personalized recommendations for user #{input_user}")
-                rec_df = pd.DataFrame(results, columns=["product_id", "adjusted_average_rating"])
-                final_df = pd.merge(rec_df, product_stats, on="product_id", how="left")
-                final_df = final_df[["product_id", "average_rating", "rating_count", "adjusted_average_rating"]]
-                final_df[["average_rating", "adjusted_average_rating"]] = final_df[["average_rating", "adjusted_average_rating"]].round(4)
+                st.success(f"Top personalized recommendations for user #{num}")
+                rec_df = pd.DataFrame(
+                    recs, columns=["product_id", "adjusted_average_rating"]
+                )
+                final_df = pd.merge(
+                    rec_df, product_stats, on="product_id", how="left"
+                )[
+                    ["product_id", "average_rating", "rating_count", "adjusted_average_rating"]
+                ]
+                final_df[
+                    ["average_rating", "adjusted_average_rating"]
+                ] = final_df[
+                    ["average_rating", "adjusted_average_rating"]
+                ].round(4)
                 st.table(final_df)
 
-        
-        except:
-            st.warning("User not found. Showing top-ranked products.")
-            results = get_top_n_products(product_stats, n=10, min_ratings=20)
-            st.table(results)
+        except ValueError:
+            st.warning("Invalid input. Please enter a number.")
+            fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
+            st.table(fallback)
 
-else:
+else:  # Continue as Guest
     if st.button("Show Popular Products"):
-        results = get_top_n_products(product_stats, n=10, min_ratings=20)
+        topn = get_top_n_products(product_stats, n=10, min_ratings=20)
         st.success("Popular picks based on adjusted average rating:")
-        st.table(results)
+        st.table(topn)
