@@ -46,7 +46,7 @@ with col2:
 
 
 
-if mode == "Enter User ID":
+if mode == "🎯 Active User (personalized)":
     input_user_num = st.selectbox(
         "Select User Number",
         options=list(user_mapping.keys()),
