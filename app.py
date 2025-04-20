@@ -49,22 +49,11 @@ st.title("📦 Product Recommender")
 
 mode = st.sidebar.radio(
     "Choose an option:",
-    ["Demo User", "Enter User ID", "Continue as Guest"]
+    ["Enter User ID", "Continue as Guest"]
 )
 
-if mode == "Demo User":
-    demo_user = st.selectbox("Select a demo user:", sample_user_ids)
-    if st.button("Show Recommendations"):
-        recs = get_recommendations_from_dict(
-            recommendations_dict, user_mapping, demo_user
-        )
-        st.success(f"Top recommendations for user #{demo_user}")
-        st.table(
-            pd.DataFrame(recs, columns=["Product ID", "Adjusted Score"])
-        )
 
-
-elif mode == "Enter User ID":
+if mode == "Enter User ID":
     # Instead of text_input, show only the valid user numbers in a dropdown
     input_user_num = st.selectbox(
         f"Select User Number",
