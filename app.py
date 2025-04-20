@@ -52,7 +52,24 @@ elif mode == "Enter User ID":
                 raise ValueError("Invalid user number.")
             results = get_recommendations_from_dict(recommendations_dict, user_mapping, input_user_num)
             st.success(f"Top personalized recommendations for user #{input_user}")
-            st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score"]))
+
+            # Convert to DataFrame
+            rec_df = pd.DataFrame(results, columns=["product_id", "adjusted_average_rating"])
+            
+            # Merge with product_stats to get avg rating and count
+            final_df = pd.merge(rec_df, product_stats, on="product_id", how="left")
+            
+            # Select and reorder columns
+            final_df = final_df[["product_id", "average_rating", "rating_count", "adjusted_average_rating"]]
+            
+            # Round values for display
+            final_df[["average_rating", "adjusted_average_rating"]] = final_df[["average_rating", "adjusted_average_rating"]].round(4)
+            
+            # Show in Streamlit
+            st.table(final_df)
+
+
+        
         except:
             st.warning("User not found. Showing top-ranked products.")
             results = get_top_n_products(product_stats, n=10, min_ratings=20)
