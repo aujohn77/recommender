@@ -2,15 +2,11 @@ import streamlit as st
 import pandas as pd
 import pickle
 import os
-import gdown
-
 from recommender_functions import get_top_n_products
 
-# Download recommendations_dict.pkl if not exists
-file_id = "1xBlXLWURaR6MuFIlZrnYWiMbj2sLxi6j"
-output_path = "recommendations_dict.pkl"
-if not os.path.exists(output_path):
-    gdown.download(id=file_id, output=output_path, quiet=False)
+
+with open("recommendations_dict.pkl", "rb") as f:
+    recommendations_dict = pickle.load(f)
 
 # Load recommendations dictionary
 with open("recommendations_dict.pkl", "rb") as f:
