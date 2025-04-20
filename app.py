@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import os
 import gdown
+import requests
 from recommender_functions import get_recommendations, get_top_n_products
 
 # Download user_item_matrix.pkl if it doesn't exist
@@ -35,7 +36,7 @@ sample_user_ids = list(user_mapping.keys())[:10]
 
 
 
-import requests
+
 
 def call_prediction_api(user_id, product_id):
     try:
