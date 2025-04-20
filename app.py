@@ -51,7 +51,8 @@ elif mode == "Enter User ID":
             results = get_recommendations_from_dict(recommendations_dict, user_mapping, input_user_num)
 
             # Handle "Invalid user number" return
-            if isinstance(results, str):
+            if isinstance(results, str) or not results:
+
                 st.warning("User not found. Showing top-ranked products.")
                 results = get_top_n_products(product_stats, n=10, min_ratings=20)
                 st.table(results)
