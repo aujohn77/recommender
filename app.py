@@ -5,8 +5,6 @@ import os
 from recommender_functions import get_top_n_products
 
 
-with open("recommendations_dict.pkl", "rb") as f:
-    recommendations_dict = pickle.load(f)
 
 # Load recommendations dictionary
 with open("recommendations_dict.pkl", "rb") as f:
