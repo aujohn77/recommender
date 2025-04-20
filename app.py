@@ -37,11 +37,13 @@ st.title("📦 Product Recommender")
 # Create three columns; we'll put the radio in the middle one
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
+
     mode = st.radio(
-        "Choose an option:", 
-        ["Enter User ID", "Continue as Guest"],
-        horizontal=True
-    )
+    "Choose a recommendation mode:",
+    ["🎯 Active User (personalized)", "👋 New User (popular products)"],
+    horizontal=True
+)
+
 
 
 if mode == "Enter User ID":
