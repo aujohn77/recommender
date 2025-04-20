@@ -33,7 +33,16 @@ def get_recommendations_from_dict(recommendations_dict, user_mapping, user_numbe
 
 st.title("📦 Product Recommender")
 
-mode = st.sidebar.radio("Choose an option:", ["Enter User ID", "Continue as Guest"])
+
+# Create three columns; we'll put the radio in the middle one
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    mode = st.radio(
+        "Choose an option:", 
+        ["Enter User ID", "Continue as Guest"],
+        horizontal=True
+    )
+
 
 if mode == "Enter User ID":
     input_user_num = st.selectbox(
