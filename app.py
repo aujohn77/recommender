@@ -1,84 +1,34 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pickle
 import os
-import gdown
-import requests
-from recommender_functions import get_recommendations, get_top_n_products
+from recommender_functions import get_top_n_products
 
-# Download user_item_matrix.pkl if it doesn't exist
-file_id = "1xBlXLWURaR6MuFIlZrnYWiMbj2sLxi6j"
-output_path = "user_item_matrix.pkl"
 
-if not os.path.exists(output_path):
-    gdown.download(id=file_id, output=output_path, quiet=False)
-
+# Load recommendations dictionary
+with open("recommendations_dict.pkl", "rb") as f:
+    recommendations_dict = pickle.load(f)
 
 # Load user mapping
 with open("user_mapping.pkl", "rb") as f:
     user_mapping = pickle.load(f)
- 
-# Load user-item matrix
-with open("user_item_matrix.pkl", "rb") as f:
-    user_item_matrix = pickle.load(f)
 
-# Load item counts
-with open("item_counts.pkl", "rb") as f:
-    item_counts = pickle.load(f)
-
-# Load product_stats (for rank-based fallback)
+# Load product_stats (for fallback)
 with open("product_stats.pkl", "rb") as f:
     product_stats = pickle.load(f)
 
-# Preload example users (in user_mapping)
+# Preload example users
 sample_user_ids = list(user_mapping.keys())[:10]
 
-
-
-
-# This function is the bridge between the Streamlit app and the model that is hosted in Hugging Face.
-# It sends a user-product pair and gets back a predicted rating.
-def call_prediction_api(user_id, product_id):
-    try:
-        response = requests.post(
-            "https://aujohn77.hf.space/predict",
-            json={"user_id": user_id, "product_id": product_id},
-            timeout=5
-        )
-        result = response.json()
-        return result.get("rating", None)
-    except Exception as e:
-        return None
-
-# get_recommendations with version that uses call_prediction_api
-def get_recommendations(user_item_matrix, user_mapping, user_number, top_n, item_counts, threshold=4.0):
+# Function to get recommendations from precomputed dictionary
+def get_recommendations_from_dict(recommendations_dict, user_mapping, user_number):
     if user_number not in user_mapping:
         return f"Invalid user number. Choose between 1 and {len(user_mapping)}."
 
-    real_user_id = user_mapping[user_number]
-    non_interacted_products = user_item_matrix.loc[real_user_id][user_item_matrix.loc[real_user_id].isnull()].index.tolist()
+    user_id = user_mapping[user_number]
+    return recommendations_dict.get(user_id, [])
 
-    recommendations = []
-    for item_id in non_interacted_products:
-        est = call_prediction_api(real_user_id, item_id) # <--- predictions are called here
-        if est is None:
-            continue
-
-        n = item_counts.get(item_id, 1)
-        adjusted_est = est - (1 / np.sqrt(n))
-
-        if adjusted_est >= threshold:
-            recommendations.append((item_id, adjusted_est, n))
-
-    recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
-    return recommendations
-
-
-
-
-
-
+# ---------------- Streamlit UI ---------------- #
 st.title("📦 Product Recommender")
 
 mode = st.sidebar.radio("Choose an option:", ["Demo User", "Enter User ID", "Continue as Guest"])
@@ -86,35 +36,36 @@ mode = st.sidebar.radio("Choose an option:", ["Demo User", "Enter User ID", "Con
 if mode == "Demo User":
     demo_user = st.selectbox("Select a demo user:", sample_user_ids)
     if st.button("Show Recommendations"):
-        results = get_recommendations(
-        user_item_matrix, user_mapping, demo_user,
-        top_n=10, item_counts=item_counts
-        )
-
+        results = get_recommendations_from_dict(recommendations_dict, user_mapping, demo_user)
         st.success(f"Top recommendations for user #{demo_user}")
-        st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
-
-
+        st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score"]))
 
 elif mode == "Enter User ID":
     input_user = st.text_input(f"Enter User Number (0 to {len(user_mapping)-1}):")
     if st.button("Show Recommendations"):
         try:
             input_user_num = int(input_user)
-            if input_user_num not in user_mapping:
-                raise ValueError("Invalid user number.")
+            results = get_recommendations_from_dict(recommendations_dict, user_mapping, input_user_num)
 
-            results = get_recommendations(
-                user_item_matrix, user_mapping, input_user_num,
-                top_n=10, item_counts=item_counts
-            )
-            st.success(f"Top personalized recommendations for user #{input_user}")
-            st.table(pd.DataFrame(results, columns=["Product ID", "Adjusted Score", "Rating Count"]))
+            # Handle "Invalid user number" return
+            if isinstance(results, str) or not results:
+
+                st.warning("User not found. Showing top-ranked products.")
+                results = get_top_n_products(product_stats, n=10, min_ratings=20)
+                st.table(results)
+            else:
+                st.success(f"Top personalized recommendations for user #{input_user}")
+                rec_df = pd.DataFrame(results, columns=["product_id", "adjusted_average_rating"])
+                final_df = pd.merge(rec_df, product_stats, on="product_id", how="left")
+                final_df = final_df[["product_id", "average_rating", "rating_count", "adjusted_average_rating"]]
+                final_df[["average_rating", "adjusted_average_rating"]] = final_df[["average_rating", "adjusted_average_rating"]].round(4)
+                st.table(final_df)
+
+        
         except:
             st.warning("User not found. Showing top-ranked products.")
             results = get_top_n_products(product_stats, n=10, min_ratings=20)
             st.table(results)
-
 
 else:
     if st.button("Show Popular Products"):
