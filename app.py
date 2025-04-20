@@ -65,49 +65,32 @@ if mode == "Demo User":
 
 
 elif mode == "Enter User ID":
-    input_user = st.text_input(f"Enter User Number ({min(user_mapping)} to {max(user_mapping)}):")
+    # Instead of text_input, show only the valid user numbers in a dropdown
+    input_user_num = st.selectbox(
+        f"Select User Number",
+        options=list(user_mapping.keys()),
+        format_func=lambda x: f"{x} → {user_mapping[x]}"  # shows “1 → A123” for clarity
+    )
     if st.button("Show Recommendations"):
-        try:
-            num = int(input_user)
-            recs = get_recommendations_from_dict(recommendations_dict, user_mapping, num)
+        recs = get_recommendations_from_dict(
+            recommendations_dict, user_mapping, input_user_num
+        )
 
-            if isinstance(recs, str) or not recs:
-                st.warning("User not found or no recommendations. Showing top-ranked products.")
-                fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
-                st.table(fallback)
-
-            else:
-                st.success(f"Top personalized recommendations for user #{num}")
-
-                # recs is a list of (product_id, user_adjusted_score) tuples
-                product_ids = [pid for (pid, _) in recs]
-
-                # Filter product_stats to just these products
-                final_df = product_stats[
-                    product_stats['product_id'].isin(product_ids)
-                ].copy()
-
-                # Sort by the global adjusted average rating
-                final_df = final_df.sort_values(
-                    by='adjusted_average_rating',
-                    ascending=False
-                ).reset_index(drop=True)
-
-                # Round the numeric columns
-                final_df[['average_rating', 'adjusted_average_rating']] = (
-                    final_df[['average_rating', 'adjusted_average_rating']]
-                    .round(4)
-                )
-
-                # Display only the columns you requested
-                st.table(final_df[
-                    ['product_id', 'average_rating', 'rating_count', 'adjusted_average_rating']
-                ])
-
-        except ValueError:
-            st.warning("Invalid input. Please enter a valid user number.")
+        if isinstance(recs, str) or not recs:
+            st.warning("User not found or no recommendations. Showing top-ranked products.")
             fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
             st.table(fallback)
+        else:
+            st.success(f"Top personalized recommendations for user #{input_user_num}")
+            # Filter product_stats for just these recs
+            product_ids = [pid for (pid, _) in recs]
+            final_df = product_stats[
+                product_stats['product_id'].isin(product_ids)
+            ].sort_values('adjusted_average_rating', ascending=False).reset_index(drop=True)
+            final_df[['average_rating','adjusted_average_rating']] = final_df[
+                ['average_rating','adjusted_average_rating']
+            ].round(4)
+            st.table(final_df[['product_id','average_rating','rating_count','adjusted_average_rating']])
 
 
 
