@@ -47,13 +47,17 @@ elif mode == "Enter User ID":
         try:
             input_user_num = int(input_user)
             results = get_recommendations_from_dict(recommendations_dict, user_mapping, input_user_num)
-
-            # Handle "Invalid user number" return
-            if isinstance(results, str) or not results:
-
+            
+            if isinstance(results, str):
                 st.warning("User not found. Showing top-ranked products.")
                 fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
                 st.table(fallback)
+            
+            elif not results:
+                st.warning(f"User #{input_user} has no recommendations.")
+                fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
+                st.table(fallback)
+            
             else:
                 st.success(f"Top personalized recommendations for user #{input_user}")
                 rec_df = pd.DataFrame(results, columns=["product_id", "adjusted_average_rating"])
@@ -62,6 +66,11 @@ elif mode == "Enter User ID":
                 final_df[["average_rating", "adjusted_average_rating"]] = final_df[["average_rating", "adjusted_average_rating"]].round(4)
                 st.table(final_df)
 
+
+
+
+
+            
         
         except:
             st.warning("User not found. Showing top-ranked products.")
