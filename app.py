@@ -54,8 +54,8 @@ elif mode == "Enter User ID":
             if isinstance(results, str) or not results:
 
                 st.warning("User not found. Showing top-ranked products.")
-                results = get_top_n_products(product_stats, n=10, min_ratings=20)
-                st.table(results)
+                fallback = get_top_n_products(product_stats, n=10, min_ratings=20)
+                st.table(fallback)
             else:
                 st.success(f"Top personalized recommendations for user #{input_user}")
                 rec_df = pd.DataFrame(results, columns=["product_id", "adjusted_average_rating"])
