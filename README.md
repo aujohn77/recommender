@@ -67,18 +67,19 @@ The final production-ready solution uses **precomputed predictions**, enabling r
 ## 🧪 How to Run Locally
 
 1. Clone the repository  
-   ``` bash
+ ```
    git clone https://github.com/aujohn77/recommender.git
    cd recommender
 ```
 
 2. Install dependencies
 
+```
 pip install -r requirements.txt
-
+```
 
 3. Run the Streamlit app
-
+```
 streamlit run app.py
-
+```
 
