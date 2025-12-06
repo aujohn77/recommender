@@ -17,6 +17,21 @@ Key steps in the pipeline:
 
 ---
 
+## 📌 Note on Notebooks & Analysis
+
+The exploratory analysis, model development, and evaluation were performed in a private Jupyter notebook as part of the MIT-IDSS capstone requirements.  
+Due to **copyright restrictions**, the notebook cannot be shared publicly.
+
+This repository contains only the **production-ready components** of the recommender system, including:
+
+- Pretrained model artifacts (`.pkl`)  
+- The recommendation pipeline  
+- Streamlit inference app  
+
+Further methodological details can be discussed upon request.
+
+---
+
 ## 📚 Models & Methods Implemented
 
 | Method / Strategy | Description |
@@ -30,7 +45,8 @@ Key steps in the pipeline:
 
 ## ✅ Model Evaluation & Selection
 
-All models are compared using **precision@k** and **recall@k** — ensuring performance is assessed based on recommendation relevance and coverage across users. The final production-ready solution uses **precomputed predictions**, enabling rapid inference via a lightweight web interface.
+All models are compared using **precision@k** and **recall@k** — ensuring performance is assessed based on recommendation relevance and coverage across users.  
+The final production-ready solution uses **precomputed predictions**, enabling rapid inference via a lightweight web interface.
 
 ---
 
@@ -51,6 +67,18 @@ All models are compared using **precision@k** and **recall@k** — ensuring perf
 ## 🧪 How to Run Locally
 
 1. Clone the repository  
-   ```bash
+   ``` bash
    git clone https://github.com/aujohn77/recommender.git
    cd recommender
+```
+
+2. Install dependencies
+
+pip install -r requirements.txt
+
+
+3. Run the Streamlit app
+
+streamlit run app.py
+
+
