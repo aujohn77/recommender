@@ -1,4 +1,4 @@
-# Amazon-style Product Recommendation System
+# Amazon Product Recommender
 
 A Python-based recommendation engine built on real Amazon review data. The system supports multiple collaborative filtering and matrix-factorisation models, and delivers fast, on-demand product recommendations via a Streamlit interface.
 
